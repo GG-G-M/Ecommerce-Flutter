@@ -12,6 +12,8 @@ class _ProductPageState extends State<ProductPage> {
   int selectedIndex = 0;
   int currentNavIndex = 0;
   Set<Product> favoriteProducts = {};
+  List<Product> cart = [];
+
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +25,11 @@ class _ProductPageState extends State<ProductPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(12.0),
-        child: currentNavIndex == 0 ? _buildHome() : _buildFavorites(),
+        child: currentNavIndex == 0
+    ? _buildHome()
+    : currentNavIndex == 1
+        ? _buildFavorites()
+        : _buildCart(),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentNavIndex,
@@ -36,12 +42,94 @@ class _ProductPageState extends State<ProductPage> {
         },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite),
-            label: "Favorites",
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: "Favorites"),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: "Cart"),
         ],
       ),
+    );
+  }
+
+    Widget _buildCart() {
+    if (cart.isEmpty) {
+      return const Center(child: Text("Your cart is empty."));
+    }
+
+    double total = 0;
+    for (var item in cart) {
+      total += double.parse(item.price) * item.quantity;
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: cart.length,
+            itemBuilder: (context, index) {
+              final product = cart[index];
+              return ListTile(
+                leading: Image.asset(product.image, width: 50),
+                title: Text(product.name),
+                subtitle: Text("₱${product.price} x ${product.quantity}"),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    setState(() => cart.removeAt(index));
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+
+        // CHECKOUT SECTION
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.blue[50],
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              Text(
+                "Total: ₱${total.toStringAsFixed(2)}",
+                style: const TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.bold
+                ),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    cart.clear();
+                  });
+
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text("Checkout Complete!"),
+                      content: const Text("Thank you for your purchase."),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40, vertical: 12
+                  ),
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text("Checkout"),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -170,6 +258,29 @@ class _ProductPageState extends State<ProductPage> {
               "\$${product.price}",
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
+            const SizedBox(height: 10),
+
+            // ADD TO CART BUTTON
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  cart.add(product);
+                });
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text("${product.name} added to cart!"),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text("Add to Cart"),
+            ),
+
           ],
         ),
       ),

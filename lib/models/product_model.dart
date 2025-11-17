@@ -4,6 +4,7 @@ class Product {
   final String status;
   final String image;
   final String category;
+  int quantity;
 
   Product({
     required this.name,
@@ -11,8 +12,10 @@ class Product {
     required this.status,
     required this.image,
     required this.category,
+    this.quantity = 1,
   });
 }
+
 
 final List<Product> products = [
   Product(
